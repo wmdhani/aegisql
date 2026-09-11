@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  target-db:
+    image: mysql:8.0
+    container_name: aegis_target_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+    volumes:
+      - target_db_data:/var/lib/mysql
+      - ./infrastructure/mysql/init:/docker-entrypoint-initdb.d
+    networks:
+      - isolated_data_net
+
+  bastion-api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: aegis_api
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "${API_PORT}:8000"
+    volumes:
+      - ./backend:/app # Hot-reload file saat development
+    networks:
+      - internal_control_net
+      - isolated_data_net
+    depends_on:
+      - target-db
+
+networks:
+  internal_control_net:
+    driver: bridge
+  isolated_data_net:
+    driver: bridge
+    internal: true # Mengunci network ini dari luar
+
+volumes:
+  target_db_data:
