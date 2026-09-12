@@ -1,0 +1,11 @@
+{
+  "ERR_SESSION_NOT_FOUND": "JIT session not found.",
+  "ERR_SESSION_EXPIRED": "JIT access session is invalid or has expired.",
+  "ERR_EMPTY_QUERY": "Empty query is not allowed.",
+  "ERR_MULTI_STATEMENT": "Security Violation: Multi-statement query detected and blocked.",
+  "ERR_FORBIDDEN_OPERATION": "Security Policy Violation: '{operation}' operation is not allowed in JIT session.",
+  "ERR_SELECT_ONLY": "Access Restricted: Only 'SELECT' statements are permitted.",
+  "MSG_QUERY_SAFE": "Query passed security validation.",
+  "ERR_HEADER_MISSING": "Header 'X-Session-ID' is required for JIT access authorization.",
+  "ERR_DB_EXECUTION": "Database execution error: {message}"
+}

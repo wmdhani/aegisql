@@ -1,22 +1,18 @@
 """
 AegisQL Guardrail Engine
-Menganalisis SQL Abstract Syntax Tree (AST) untuk menegakkan prinsip Read-Only,
-mencegah manipulasi skema (DDL/DML), dan menyuntikkan limit batas eksekusi.
+Analyzes SQL Abstract Syntax Tree (AST) to enforce Read-Only principles,
+prevent schema manipulation (DDL/DML), and inject execution limits.
 """
-
 from typing import Tuple
 import sqlglot
 from sqlglot import exp
 
-
-class SecurityViolationError(Exception):
-    pass
+from app.core.i18n import translator
 
 
 class SQLGuardrail:
     DEFAULT_MAX_LIMIT = 100
 
-    # Statement terlarang pada sesi read-only JIT
     FORBIDDEN_EXPRESSIONS = (
         exp.Drop,
         exp.Delete,
@@ -30,40 +26,44 @@ class SQLGuardrail:
     )
 
     @classmethod
-    def inspect_and_sanitize(cls, raw_sql: str) -> Tuple[bool, str, str]:
+    def inspect_and_sanitize(cls, raw_sql: str, locale: str = "en") -> Tuple[bool, str, str]:
+        """
+        Validates and sanitizes SQL queries by parsing the Abstract Syntax Tree (AST).
+
+        Args:
+            raw_sql (str): The raw SQL string input from the user.
+            locale (str): Client's preferred language code for localization.
+
+        Returns:
+            Tuple[bool, str, str]: (is_safe, sanitized_sql, reason_message)
+        """
         cleaned_sql = raw_sql.strip()
         if not cleaned_sql:
-            return False, "", "Query kosong tidak diizinkan."
+            return False, "", translator.get(locale, "ERR_EMPTY_QUERY")
 
         try:
             parsed_statements = sqlglot.parse(cleaned_sql, read="mysql")
         except Exception as e:
-            return False, "", f"Gagal parsing SQL syntax: {str(e)}"
+            # We keep the raw exception for debugging, but prefix it
+            return False, "", f"SQL Parser Error: {str(e)}"
 
-        # 1. Cegah multi-statement query (mencegah teknik SQL injection chaining)
+        # 1. Prevent multi-statement queries (SQL injection chaining)
         if len(parsed_statements) > 1:
-            return (
-                False,
-                "",
-                "Pelanggaran Keamanan: Multi-statement query terdeteksi dan diblokir.",
-            )
+            return False, "", translator.get(locale, "ERR_MULTI_STATEMENT")
 
         statement = parsed_statements[0]
 
-        # 2. Periksa ekspresi terlarang
+        # 2. Check for forbidden expressions (DDL / DML)
         for expr_type in cls.FORBIDDEN_EXPRESSIONS:
             if statement.find(expr_type):
-                return (
-                    False,
-                    "",
-                    f"Pelanggaran Kebijakan: Operasi '{expr_type.__name__.upper()}' tidak diizinkan pada sesi JIT.",
-                )
+                op_name = expr_type.__name__.upper()
+                return False, "", translator.get(locale, "ERR_FORBIDDEN_OPERATION", operation=op_name)
 
-        # 3. Validasi root statement harus bertipe SELECT
+        # 3. Ensure root statement is SELECT
         if not isinstance(statement, exp.Select):
-            return False, "", "Akses Dibatasi: Hanya statement 'SELECT' yang diizinkan."
+            return False, "", translator.get(locale, "ERR_SELECT_ONLY")
 
-        # 4. Evaluasi klausa LIMIT untuk mitigasi Resource Exhaustion
+        # 4. Limit Injection for DoS mitigation
         limit_node = statement.args.get("limit")
         if not limit_node:
             statement = statement.limit(cls.DEFAULT_MAX_LIMIT)
@@ -71,14 +71,9 @@ class SQLGuardrail:
             try:
                 current_limit = int(limit_node.expression.this)
                 if current_limit > cls.DEFAULT_MAX_LIMIT:
-                    statement.set(
-                        "limit",
-                        exp.Limit(this=exp.Literal.number(cls.DEFAULT_MAX_LIMIT)),
-                    )
+                    statement.set("limit", exp.Limit(this=exp.Literal.number(cls.DEFAULT_MAX_LIMIT)))
             except (ValueError, AttributeError):
-                statement.set(
-                    "limit", exp.Limit(this=exp.Literal.number(cls.DEFAULT_MAX_LIMIT))
-                )
+                statement.set("limit", exp.Limit(this=exp.Literal.number(cls.DEFAULT_MAX_LIMIT)))
 
         sanitized_sql = statement.sql(dialect="mysql")
-        return True, sanitized_sql, "Query lolos validasi keamanan."
+        return True, sanitized_sql, translator.get(locale, "MSG_QUERY_SAFE")

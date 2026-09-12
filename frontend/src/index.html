@@ -35,27 +35,33 @@
       </div>
     </div>
 
-    <!-- Active Session Widget -->
-    <div class="flex items-center space-x-4">
-      <template x-if="session.active">
-        <div class="flex items-center gap-3 bg-dark-800 border border-slate-700 rounded-lg px-3 py-1.5 shadow-sm">
-          <div class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></div>
-          <div class="text-xs">
-            <span class="text-slate-400">Operator:</span> <strong class="text-slate-200" x-text="session.username"></strong>
-            <span class="mx-2 text-slate-600">|</span>
-            <span class="text-slate-400">TTL:</span> <span class="font-mono text-emerald-400 font-bold" x-text="formatTime(session.remainingSeconds)"></span>
-          </div>
-          <button @click="revokeSession()" class="text-xs text-rose-400 hover:text-rose-300 font-medium ml-2 px-2 py-0.5 rounded hover:bg-rose-950/40">
-            Revoke
-          </button>
-        </div>
-      </template>
+    <!-- Right Header Actions -->
+    <div class="flex items-center space-x-6">
+      
+      <!-- Language Toggle -->
+      <div class="flex items-center gap-2 text-xs font-semibold bg-dark-800 border border-slate-700 rounded-lg p-1">
+        <button @click="currentLang = 'en'" :class="currentLang === 'en' ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'" class="px-2 py-1 rounded transition">EN</button>
+        <button @click="currentLang = 'id'" :class="currentLang === 'id' ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'" class="px-2 py-1 rounded transition">ID</button>
+      </div>
 
-      <template x-if="!session.active">
-        <button @click="showRequestModal = true" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-4 py-2 rounded-md shadow transition">
-          Request JIT Access
-        </button>
-      </template>
+      <!-- Active Session Widget -->
+      <div>
+        <template x-if="session.active">
+          <div class="flex items-center gap-3 bg-dark-800 border border-slate-700 rounded-lg px-3 py-1.5 shadow-sm">
+            <div class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></div>
+            <div class="text-xs">
+              <span class="text-slate-400" x-text="i18n[currentLang].operator + ':'"></span> <strong class="text-slate-200" x-text="session.username"></strong>
+              <span class="mx-2 text-slate-600">|</span>
+              <span class="text-slate-400">TTL:</span> <span class="font-mono text-emerald-400 font-bold" x-text="formatTime(session.remainingSeconds)"></span>
+            </div>
+            <button @click="revokeSession()" class="text-xs text-rose-400 hover:text-rose-300 font-medium ml-2 px-2 py-0.5 rounded hover:bg-rose-950/40" x-text="i18n[currentLang].revokeBtn"></button>
+          </div>
+        </template>
+
+        <template x-if="!session.active">
+          <button @click="showRequestModal = true" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-4 py-2 rounded-md shadow transition" x-text="i18n[currentLang].requestBtn"></button>
+        </template>
+      </div>
     </div>
   </header>
 
@@ -68,8 +74,8 @@
       <!-- Query Editor Container -->
       <div class="bg-dark-900 border border-slate-800 rounded-xl p-4 shadow-sm flex flex-col gap-3">
         <div class="flex justify-between items-center border-b border-slate-800 pb-2">
-          <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">SQL Interrogation Console</span>
-          <span class="text-xs text-slate-500 font-mono">AST Guardrail & Limit Injection Active</span>
+          <span class="text-xs font-semibold uppercase tracking-wider text-slate-400" x-text="i18n[currentLang].consoleTitle"></span>
+          <span class="text-xs text-slate-500 font-mono" x-text="i18n[currentLang].guardrailActive"></span>
         </div>
         
         <textarea 
@@ -77,7 +83,7 @@
           :disabled="!session.active"
           rows="4" 
           class="w-full bg-dark-950 border border-slate-700 rounded-lg p-3 font-mono text-sm text-slate-200 focus:outline-none focus:border-blue-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
-          placeholder="-- Ketik query Anda (misal: SELECT * FROM corporate_taxpayers)"></textarea>
+          :placeholder="i18n[currentLang].queryPlaceholder"></textarea>
 
         <div class="flex justify-between items-center pt-1">
           <div class="text-xs text-slate-400">
@@ -89,8 +95,8 @@
             @click="runQuery()" 
             :disabled="!session.active || isExecuting"
             class="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-medium text-xs px-5 py-2 rounded-lg flex items-center gap-2 shadow-sm transition">
-            <span x-show="!isExecuting">⚡ Execute Interrogation</span>
-            <span x-show="isExecuting">Executing...</span>
+            <span x-show="!isExecuting">⚡ <span x-text="i18n[currentLang].executeBtn"></span></span>
+            <span x-show="isExecuting" x-text="i18n[currentLang].executingStatus"></span>
           </button>
         </div>
       </div>
@@ -98,10 +104,10 @@
       <!-- Result Data Table -->
       <div class="bg-dark-900 border border-slate-800 rounded-xl p-4 flex-1 flex flex-col shadow-sm min-h-[300px] overflow-hidden">
         <div class="flex justify-between items-center border-b border-slate-800 pb-2 mb-3">
-          <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Result View (Auto-Masked)</span>
+          <span class="text-xs font-semibold uppercase tracking-wider text-slate-400" x-text="i18n[currentLang].resultViewTitle"></span>
           <div class="text-xs text-slate-500 space-x-3">
-            <span>Rows: <strong class="text-slate-300" x-text="queryResult.rows.length"></strong></span>
-            <span>Latency: <strong class="text-slate-300" x-text="queryResult.latency + ' ms'"></strong></span>
+            <span><span x-text="i18n[currentLang].rows"></span>: <strong class="text-slate-300" x-text="queryResult.rows.length"></strong></span>
+            <span><span x-text="i18n[currentLang].latency"></span>: <strong class="text-slate-300" x-text="queryResult.latency + ' ms'"></strong></span>
           </div>
         </div>
 
@@ -123,9 +129,7 @@
                 </tr>
               </template>
               <tr x-show="queryResult.rows.length === 0">
-                <td colspan="100" class="text-center py-12 text-slate-600 font-sans">
-                  Belum ada dataset yang dimuat. Minta sesi akses dan jalankan query.
-                </td>
+                <td colspan="100" class="text-center py-12 text-slate-600 font-sans" x-text="i18n[currentLang].emptyResult"></td>
               </tr>
             </tbody>
           </table>
@@ -138,8 +142,8 @@
     <aside class="flex flex-col gap-4">
       <div class="bg-dark-900 border border-slate-800 rounded-xl p-4 flex-1 flex flex-col shadow-sm">
         <div class="flex justify-between items-center border-b border-slate-800 pb-2 mb-3">
-          <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Audit Trail (Hash Chain)</span>
-          <button @click="verifyLedger()" class="text-[11px] text-blue-400 hover:underline">Verify Integrity</button>
+          <span class="text-xs font-semibold uppercase tracking-wider text-slate-400" x-text="i18n[currentLang].auditTitle"></span>
+          <button @click="verifyLedger()" class="text-[11px] text-blue-400 hover:underline" x-text="i18n[currentLang].verifyLedgerBtn"></button>
         </div>
 
         <div class="flex-1 overflow-y-auto space-y-2 pr-1 max-h-[500px]">
@@ -155,9 +159,7 @@
               </div>
             </div>
           </template>
-          <div x-show="auditLogs.length === 0" class="text-center py-8 text-slate-600 text-xs">
-            Belum ada jejak audit tercatat.
-          </div>
+          <div x-show="auditLogs.length === 0" class="text-center py-8 text-slate-600 text-xs" x-text="i18n[currentLang].emptyAudit"></div>
         </div>
       </div>
     </aside>
@@ -167,27 +169,27 @@
   <!-- Modal Request Session -->
   <div x-show="showRequestModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
     <div class="bg-dark-900 border border-slate-700 rounded-xl max-w-md w-full p-6 shadow-2xl" @click.away="showRequestModal = false">
-      <h3 class="text-lg font-bold text-white mb-1">Request Just-In-Time Access</h3>
-      <p class="text-xs text-slate-400 mb-4">Sesi akses berbatas waktu dengan audit logging dan sanitasi query otomatis.</p>
+      <h3 class="text-lg font-bold text-white mb-1" x-text="i18n[currentLang].modalTitle"></h3>
+      <p class="text-xs text-slate-400 mb-4" x-text="i18n[currentLang].modalSubtitle"></p>
       
       <div class="space-y-3">
         <div>
-          <label class="text-xs text-slate-300 block mb-1">Username / Operator</label>
+          <label class="text-xs text-slate-300 block mb-1" x-text="i18n[currentLang].lblUsername"></label>
           <input type="text" x-model="modalForm.username" class="w-full bg-dark-950 border border-slate-700 rounded p-2 text-sm text-slate-100 focus:outline-none focus:border-blue-500">
         </div>
         <div>
-          <label class="text-xs text-slate-300 block mb-1">Justifikasi Bisnis</label>
-          <textarea x-model="modalForm.justification" rows="2" class="w-full bg-dark-950 border border-slate-700 rounded p-2 text-sm text-slate-100 focus:outline-none focus:border-blue-500" placeholder="Pemeriksaan rekonsiliasi data audit"></textarea>
+          <label class="text-xs text-slate-300 block mb-1" x-text="i18n[currentLang].lblJustification"></label>
+          <textarea x-model="modalForm.justification" rows="2" class="w-full bg-dark-950 border border-slate-700 rounded p-2 text-sm text-slate-100 focus:outline-none focus:border-blue-500" :placeholder="i18n[currentLang].phJustification"></textarea>
         </div>
         <div>
-          <label class="text-xs text-slate-300 block mb-1">Durasi Akses (Menit)</label>
+          <label class="text-xs text-slate-300 block mb-1" x-text="i18n[currentLang].lblDuration"></label>
           <input type="number" x-model.number="modalForm.duration" min="1" max="60" class="w-full bg-dark-950 border border-slate-700 rounded p-2 text-sm text-slate-100 focus:outline-none focus:border-blue-500">
         </div>
       </div>
 
       <div class="flex justify-end gap-2 mt-6">
-        <button @click="showRequestModal = false" class="px-4 py-2 rounded text-xs text-slate-400 hover:text-white">Batal</button>
-        <button @click="createSession()" class="px-4 py-2 rounded text-xs bg-blue-600 hover:bg-blue-500 text-white font-semibold">Generate Session</button>
+        <button @click="showRequestModal = false" class="px-4 py-2 rounded text-xs text-slate-400 hover:text-white" x-text="i18n[currentLang].btnCancel"></button>
+        <button @click="createSession()" class="px-4 py-2 rounded text-xs bg-blue-600 hover:bg-blue-500 text-white font-semibold" x-text="i18n[currentLang].btnGenerate"></button>
       </div>
     </div>
   </div>
@@ -195,12 +197,83 @@
   <script>
     function aegisApp() {
       return {
+        currentLang: 'en', // Default language
+        i18n: {
+          en: {
+            requestBtn: "Request JIT Access",
+            operator: "Operator",
+            revokeBtn: "Revoke",
+            consoleTitle: "SQL Interrogation Console",
+            guardrailActive: "AST Guardrail & Limit Injection Active",
+            queryPlaceholder: "-- Enter your query (e.g., SELECT * FROM corporate_taxpayers)",
+            executeBtn: "Execute Interrogation",
+            executingStatus: "Executing...",
+            resultViewTitle: "Result View (Auto-Masked)",
+            rows: "Rows",
+            latency: "Latency",
+            emptyResult: "No dataset loaded. Request an access session and execute a query.",
+            auditTitle: "Audit Trail (Hash Chain)",
+            verifyLedgerBtn: "Verify Integrity",
+            emptyAudit: "No audit trails recorded yet.",
+            modalTitle: "Request Just-In-Time Access",
+            modalSubtitle: "Time-bound access session with automatic query sanitation and audit logging.",
+            lblUsername: "Username / Operator",
+            lblJustification: "Business Justification",
+            lblDuration: "Access Duration (Minutes)",
+            phJustification: "E.g., Q3 tax transaction reconciliation",
+            btnCancel: "Cancel",
+            btnGenerate: "Generate Session",
+            msgSessionActive: "JIT session active. Guardrail ready.",
+            msgSessionExpired: "JIT session expired. Access locked.",
+            msgSessionRevoked: "Session successfully revoked.",
+            msgQuerySuccess: "Query successfully sanitized and executed.",
+            msgNetError: "Network error occurred.",
+            msgCreateFail: "Failed to generate JIT session.",
+            msgValidChain: "VALID (Intact Hash Chain)",
+            msgCompromised: "COMPROMISED",
+            msgTotalRecords: "Total Records"
+          },
+          id: {
+            requestBtn: "Minta Akses JIT",
+            operator: "Operator",
+            revokeBtn: "Cabut",
+            consoleTitle: "Konsol Interogasi SQL",
+            guardrailActive: "AST Guardrail & Limit Injection Aktif",
+            queryPlaceholder: "-- Ketik query Anda (misal: SELECT * FROM corporate_taxpayers)",
+            executeBtn: "Eksekusi Interogasi",
+            executingStatus: "Mengeksekusi...",
+            resultViewTitle: "Tampilan Hasil (Auto-Masked)",
+            rows: "Baris",
+            latency: "Latensi",
+            emptyResult: "Belum ada dataset yang dimuat. Minta sesi akses dan jalankan query.",
+            auditTitle: "Jejak Audit (Hash Chain)",
+            verifyLedgerBtn: "Verifikasi Integritas",
+            emptyAudit: "Belum ada jejak audit tercatat.",
+            modalTitle: "Permintaan Akses Just-In-Time",
+            modalSubtitle: "Sesi akses berbatas waktu dengan audit logging dan sanitasi query otomatis.",
+            lblUsername: "Nama Pengguna / Operator",
+            lblJustification: "Justifikasi Bisnis",
+            lblDuration: "Durasi Akses (Menit)",
+            phJustification: "Contoh: Rekonsiliasi transaksi pajak Q3",
+            btnCancel: "Batal",
+            btnGenerate: "Hasilkan Sesi",
+            msgSessionActive: "Sesi JIT aktif. Guardrail siap.",
+            msgSessionExpired: "Sesi JIT telah kedaluwarsa. Akses dikunci.",
+            msgSessionRevoked: "Sesi telah berhasil dicabut.",
+            msgQuerySuccess: "Query sukses disanitasi dan dieksekusi.",
+            msgNetError: "Terjadi kesalahan jaringan.",
+            msgCreateFail: "Gagal membuat sesi JIT.",
+            msgValidChain: "VALID (Rantai Hash Utuh)",
+            msgCompromised: "TERKOMPROMISI",
+            msgTotalRecords: "Total Record"
+          }
+        },
         showRequestModal: false,
         isExecuting: false,
         statusMessage: '',
         statusIsError: false,
         queryInput: 'SELECT * FROM corporate_taxpayers',
-        modalForm: { username: 'dhani.analyst', justification: 'Rekonsiliasi transaksi pajak Q3', duration: 15 },
+        modalForm: { username: 'dhani.analyst', justification: '', duration: 15 },
         session: { id: null, active: false, username: '', remainingSeconds: 0 },
         queryResult: { columns: [], rows: [], latency: 0 },
         auditLogs: [],
@@ -210,11 +283,22 @@
           this.fetchAuditLogs();
         },
 
+        getHeaders(includeSession = false) {
+          const headers = {
+            'Content-Type': 'application/json',
+            'Accept-Language': this.currentLang
+          };
+          if (includeSession && this.session.id) {
+            headers['X-Session-ID'] = this.session.id;
+          }
+          return headers;
+        },
+
         async createSession() {
           try {
             const res = await fetch('/api/v1/sessions/request', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: this.getHeaders(),
               body: JSON.stringify({
                 username: this.modalForm.username,
                 justification: this.modalForm.justification,
@@ -228,10 +312,10 @@
             this.session.active = true;
             this.showRequestModal = false;
             this.startCountdown();
-            this.statusMessage = 'Sesi JIT aktif. Guardrail siap.';
+            this.statusMessage = this.i18n[this.currentLang].msgSessionActive;
             this.statusIsError = false;
           } catch (e) {
-            alert('Gagal membuat sesi JIT.');
+            alert(this.i18n[this.currentLang].msgCreateFail);
           }
         },
 
@@ -243,7 +327,7 @@
             } else {
               this.session.active = false;
               clearInterval(this.timerInterval);
-              this.statusMessage = 'Sesi JIT telah kedaluwarsa. Akses dikunci.';
+              this.statusMessage = this.i18n[this.currentLang].msgSessionExpired;
               this.statusIsError = true;
             }
           }, 1000);
@@ -251,11 +335,14 @@
 
         async revokeSession() {
           if (!this.session.id) return;
-          await fetch(`/api/v1/sessions/${this.session.id}/revoke`, { method: 'POST' });
+          await fetch(`/api/v1/sessions/${this.session.id}/revoke`, { 
+            method: 'POST',
+            headers: this.getHeaders()
+          });
           this.session.active = false;
           this.session.remainingSeconds = 0;
           clearInterval(this.timerInterval);
-          this.statusMessage = 'Sesi telah dicabut.';
+          this.statusMessage = this.i18n[this.currentLang].msgSessionRevoked;
           this.statusIsError = true;
         },
 
@@ -265,27 +352,24 @@
           try {
             const res = await fetch('/api/v1/query/execute', {
               method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'X-Session-ID': this.session.id
-              },
+              headers: this.getHeaders(true),
               body: JSON.stringify({ sql: this.queryInput })
             });
             const json = await res.json();
             if (!res.ok) {
               this.statusIsError = true;
-              this.statusMessage = json.detail.reason || json.detail.message || 'Eksekusi query ditolak oleh kebijakan keamanan.';
+              this.statusMessage = json.detail.message || json.detail.reason || 'Execution rejected.';
               return;
             }
             this.queryResult.rows = json.data;
             this.queryResult.columns = json.data.length > 0 ? Object.keys(json.data[0]) : [];
             this.queryResult.latency = json.execution_time_ms;
             this.statusIsError = false;
-            this.statusMessage = 'Query sukses disanitasi dan dieksekusi.';
+            this.statusMessage = this.i18n[this.currentLang].msgQuerySuccess;
             this.fetchAuditLogs();
           } catch (e) {
             this.statusIsError = true;
-            this.statusMessage = 'Terjadi kesalahan jaringan.';
+            this.statusMessage = this.i18n[this.currentLang].msgNetError;
           } finally {
             this.isExecuting = false;
           }
@@ -293,15 +377,16 @@
 
         async fetchAuditLogs() {
           try {
-            const res = await fetch('/api/v1/audit/logs');
+            const res = await fetch('/api/v1/audit/logs', { headers: this.getHeaders() });
             this.auditLogs = await res.json();
           } catch (e) {}
         },
 
         async verifyLedger() {
-          const res = await fetch('/api/v1/audit/verify');
+          const res = await fetch('/api/v1/audit/verify', { headers: this.getHeaders() });
           const data = await res.json();
-          alert(`Integritas Audit: ${data.is_valid ? 'VALID (Rantai Hash Utuh)' : 'TERKOMPROMISI'}\nTotal Record: ${data.total_records}`);
+          const statusTxt = data.is_valid ? this.i18n[this.currentLang].msgValidChain : this.i18n[this.currentLang].msgCompromised;
+          alert(`Integrity: ${statusTxt}\n${this.i18n[this.currentLang].msgTotalRecords}: ${data.total_records}`);
         },
 
         formatTime(seconds) {

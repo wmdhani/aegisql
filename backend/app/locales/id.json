@@ -1,0 +1,11 @@
+{
+  "ERR_SESSION_NOT_FOUND": "Sesi JIT tidak ditemukan.",
+  "ERR_SESSION_EXPIRED": "Sesi akses JIT tidak valid atau telah kedaluwarsa.",
+  "ERR_EMPTY_QUERY": "Query kosong tidak diizinkan.",
+  "ERR_MULTI_STATEMENT": "Pelanggaran Keamanan: Multi-statement query terdeteksi dan diblokir.",
+  "ERR_FORBIDDEN_OPERATION": "Pelanggaran Kebijakan Keamanan: Operasi '{operation}' tidak diizinkan pada sesi JIT.",
+  "ERR_SELECT_ONLY": "Akses Dibatasi: Hanya statement 'SELECT' yang diizinkan.",
+  "MSG_QUERY_SAFE": "Query lolos validasi keamanan.",
+  "ERR_HEADER_MISSING": "Header 'X-Session-ID' diperlukan untuk otorisasi akses JIT.",
+  "ERR_DB_EXECUTION": "Kesalahan eksekusi database: {message}"
+}
