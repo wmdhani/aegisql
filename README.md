@@ -70,6 +70,8 @@ Web Bastion Workspace: http://localhost:3000
 Interactive OpenAPI Docs: http://localhost:8000/docs
 🔒 Threat Modeling & Security Posture
 Detailed risk mitigation analysis based on the STRIDE matrix can be reviewed in the THREAT_MODEL.md file.
+
+
 🛡️ AegisQL (Bahasa Indonesia)
 Zero-Trust Just-In-Time (JIT) Data Access Bastion & AST Guardrail Engine
 🌍 🇬🇧 Read documentation in English
